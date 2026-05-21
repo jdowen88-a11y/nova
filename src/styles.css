@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-void-black text-star-white font-body;
+    background: #0F0F1A;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-void-black;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-nebula-gray/50 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-electric-purple/50;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .font-display {
+    font-family: 'Orbitron', monospace;
+  }
+
+  .font-body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .bg-cosmic-gradient {
+    background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 50%, #16213E 100%);
+  }
+
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  }
+
+  .bg-purple-gradient {
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  .shadow-glow-gold {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  }
+}
+
+/* Crash game canvas stars */
+.star-canvas {
+  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+}
+
+/* Number input arrow removal */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Select styling */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
