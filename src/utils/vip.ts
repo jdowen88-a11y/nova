@@ -7,32 +7,35 @@ export type VipTier =
   | 'Supernova'
   | 'Black Hole Elite'
 
-const VIP_THRESHOLDS: { tier: VipTier; wager: number }[] = [
-  { tier: 'Stardust', wager: 0 },
-  { tier: 'Comet', wager: 5_000 },
-  { tier: 'Asteroid', wager: 25_000 },
-  { tier: 'Planet', wager: 100_000 },
-  { tier: 'Star', wager: 500_000 },
-  { tier: 'Supernova', wager: 2_000_000 },
-  { tier: 'Black Hole Elite', wager: 10_000_000 },
-]
+const VIP_THRESHOLDS = [
+  { tier: 'Stardust', minWager: 0 },
+  { tier: 'Comet', minWager: 5_000 },
+  { tier: 'Asteroid', minWager: 25_000 },
+  { tier: 'Planet', minWager: 100_000 },
+  { tier: 'Star', minWager: 500_000 },
+  { tier: 'Supernova', minWager: 2_000_000 },
+  { tier: 'Black Hole Elite', minWager: 10_000_000 },
+] as const satisfies readonly { tier: VipTier; minWager: number }[]
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 export function calculateVipTier(totalWagered: number): { tier: VipTier; progress: number } {
-  let currentTierIndex = 0
+  const wagered = Math.max(0, totalWagered)
+
+  let currentIndex = 0
   for (let i = VIP_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (totalWagered >= VIP_THRESHOLDS[i].wager) {
-      currentTierIndex = i
+    if (wagered >= VIP_THRESHOLDS[i].minWager) {
+      currentIndex = i
       break
     }
   }
 
-  const current = VIP_THRESHOLDS[currentTierIndex]
-  const next = VIP_THRESHOLDS[currentTierIndex + 1]
+  const current = VIP_THRESHOLDS[currentIndex]
+  const next = VIP_THRESHOLDS[currentIndex + 1]
 
-  if (!next) {
-    return { tier: current.tier, progress: 100 }
-  }
+  if (!next) return { tier: current.tier, progress: 100 }
 
-  const progress = ((totalWagered - current.wager) / (next.wager - current.wager)) * 100
-  return { tier: current.tier, progress: Math.min(100, Math.max(0, progress)) }
+  const progress = ((wagered - current.minWager) / (next.minWager - current.minWager)) * 100
+  return { tier: current.tier, progress: clamp(progress, 0, 100) }
 }
+
