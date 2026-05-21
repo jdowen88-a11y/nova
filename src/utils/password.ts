@@ -1,81 +1,65 @@
-/**
- * Password hashing using Web Crypto (PBKDF2).
- * Workers-compatible — no bcrypt.
- * Format: pbkdf2:iterations:salt:hash
- */
-
 const enc = (s: string): Uint8Array => new TextEncoder().encode(s)
 
-function bufToHex(buf: ArrayBuffer): string {
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
+function bufToHex(buf: ArrayBuffer | Uint8Array): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-function hexToBuf(hex: string): Uint8Array {
+function hexToBytes(hex: string): Uint8Array {
+  if (hex.length % 2 !== 0) throw new Error('Invalid hex length')
   const bytes = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16)
+    const byte = Number.parseInt(hex.slice(i, i + 2), 16)
+    if (Number.isNaN(byte)) throw new Error('Invalid hex')
+    bytes[i / 2] = byte
   }
   return bytes
 }
 
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i]
+  return diff === 0
+}
+
 const ITERATIONS = 100_000
 const SALT_BYTES = 16
+const HASH_BITS = 256
 
 export async function hashPassword(password: string): Promise<string> {
-  const salt = new Uint8Array(SALT_BYTES)
-  crypto.getRandomValues(salt)
-
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    enc(password) as unknown as ArrayBuffer,
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES))
+  const keyMaterial = await crypto.subtle.importKey('raw', enc(password), 'PBKDF2', false, ['deriveBits'])
   const derived = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: salt as unknown as ArrayBuffer,
-      iterations: ITERATIONS,
-      hash: 'SHA-256',
-    },
+    { name: 'PBKDF2', salt, iterations: ITERATIONS, hash: 'SHA-256' },
     keyMaterial,
-    256
+    HASH_BITS
   )
-  return `pbkdf2:${ITERATIONS}:${bufToHex(salt.buffer as ArrayBuffer)}:${bufToHex(derived)}`
+  return `pbkdf2:${ITERATIONS}:${bufToHex(salt)}:${bufToHex(derived)}`
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const parts = stored.split(':')
-  if (parts.length !== 4 || parts[0] !== 'pbkdf2') return false
-  const [, itersStr, saltHex, hashHex] = parts
-  const iterations = parseInt(itersStr, 10)
-  const salt = hexToBuf(saltHex)
+  const [scheme, itersStr, saltHex, hashHex] = stored.split(':')
+  if (scheme !== 'pbkdf2') return false
 
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    enc(password) as unknown as ArrayBuffer,
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
-  const derived = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: salt as unknown as ArrayBuffer,
-      iterations,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    256
-  )
-  const derivedHex = bufToHex(derived)
-  if (derivedHex.length !== hashHex.length) return false
-  let diff = 0
-  for (let i = 0; i < derivedHex.length; i++) {
-    diff |= derivedHex.charCodeAt(i) ^ hashHex.charCodeAt(i)
+  const iterations = Number.parseInt(itersStr, 10)
+  if (!Number.isFinite(iterations) || iterations <= 0) return false
+
+  let salt: Uint8Array
+  let expected: Uint8Array
+  try {
+    salt = hexToBytes(saltHex)
+    expected = hexToBytes(hashHex)
+  } catch {
+    return false
   }
-  return diff === 0
+
+  const keyMaterial = await crypto.subtle.importKey('raw', enc(password), 'PBKDF2', false, ['deriveBits'])
+  const derived = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    keyMaterial,
+    expected.length * 8
+  )
+
+  return constantTimeEqual(new Uint8Array(derived), expected)
 }
