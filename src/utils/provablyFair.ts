@@ -19,7 +19,7 @@ function bufToHex(buf: ArrayBuffer): string {
 export function generateServerSeed(): string {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
-  return bufToHex(bytes.buffer as ArrayBuffer)
+  return bufToHex(bytes.buffer)
 }
 
 /**
@@ -27,7 +27,7 @@ export function generateServerSeed(): string {
  * Returns 64-char lowercase hex.
  */
 export async function generateServerSeedHash(serverSeed: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', enc(serverSeed) as unknown as ArrayBuffer)
+  const digest = await crypto.subtle.digest('SHA-256', enc(serverSeed))
   return bufToHex(digest)
 }
 
@@ -41,13 +41,13 @@ export async function calculateGameResult(
 ): Promise<number> {
   const key = await crypto.subtle.importKey(
     'raw',
-    enc(serverSeed) as unknown as ArrayBuffer,
+    enc(serverSeed),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']
   )
   const message = `${clientSeed}:${gameType}`
-  const sig = await crypto.subtle.sign('HMAC', key, enc(message) as unknown as ArrayBuffer)
+  const sig = await crypto.subtle.sign('HMAC', key, enc(message))
   const hex = bufToHex(sig)
   const first8 = parseInt(hex.slice(0, 8), 16)
   return first8 / 0x100000000
