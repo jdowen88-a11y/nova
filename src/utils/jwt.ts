@@ -24,7 +24,7 @@ function base64UrlDecode(s: string): Uint8Array {
 async function importKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     'raw',
-    enc(secret) as unknown as ArrayBuffer,
+    enc(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify']
@@ -51,7 +51,7 @@ export async function signJWT(
   const body = base64UrlEncode(enc(JSON.stringify(fullPayload)))
   const signingInput = `${HEADER}.${body}`
   const key = await importKey(secret)
-  const sig = await crypto.subtle.sign('HMAC', key, enc(signingInput) as unknown as ArrayBuffer)
+  const sig = await crypto.subtle.sign('HMAC', key, enc(signingInput))
   return `${signingInput}.${base64UrlEncode(sig)}`
 }
 
@@ -61,12 +61,7 @@ export async function verifyJWT(token: string, secret: string): Promise<JWTPaylo
   const [header, body, sig] = parts
   const signingInput = `${header}.${body}`
   const key = await importKey(secret)
-  const valid = await crypto.subtle.verify(
-    'HMAC',
-    key,
-    base64UrlDecode(sig) as unknown as ArrayBuffer,
-    enc(signingInput) as unknown as ArrayBuffer
-  )
+  const valid = await crypto.subtle.verify('HMAC', key, base64UrlDecode(sig), enc(signingInput))
   if (!valid) throw new Error('Invalid JWT signature')
   const payload: JWTPayload = JSON.parse(dec(base64UrlDecode(body)))
   const now = Math.floor(Date.now() / 1000)
