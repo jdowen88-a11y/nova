@@ -1,0 +1,37 @@
+{
+  "name": "nova",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "pages:dev": "npm run build && wrangler pages dev dist --compatibility-date=2026-05-25",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply nova-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply nova-db --remote"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "drizzle-orm": "latest",
+    "hono": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "drizzle-kit": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "wrangler": "latest"
+  }
+}
