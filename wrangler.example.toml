@@ -1,0 +1,34 @@
+name = "nova"
+compatibility_date = "2026-05-25"
+pages_build_output_dir = "dist"
+
+# Copy this file to wrangler.toml locally and fill in your real Cloudflare resource IDs.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nova-db"
+database_id = "your-d1-database-id"
+
+[[kv_namespaces]]
+binding = "KV_STORE"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "your-rate-limit-kv-namespace-id"
+preview_id = "your-preview-rate-limit-kv-namespace-id"
+
+[[durable_objects.bindings]]
+name = "CRASH_GAME"
+class_name = "CrashGame"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["CrashGame"]
+
+[vars]
+NODE_ENV = "development"
+TOS_VERSION = "2026-05-25"
+BLOCKED_STATES = "ID,WA,MI"
+ALLOWED_ORIGINS = "*"
