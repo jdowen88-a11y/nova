@@ -1,0 +1,23 @@
+name: Nova offline application build
+on:
+  push:
+    branches: [main, audit/offline-build-20261113]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install dependencies without execution of package scripts
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Typecheck app and Cloudflare types only
+        run: npm run typecheck
+      - name: Build static app (no publication)
+        run: npm run build
