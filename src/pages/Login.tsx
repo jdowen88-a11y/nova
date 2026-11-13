@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from '../components/Router'
+import { Link } from '../components/Link'
 
 interface LoginProps {
   onLogin: (token: string) => void
