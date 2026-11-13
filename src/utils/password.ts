@@ -1,11 +1,11 @@
-const enc = (s: string): Uint8Array => new TextEncoder().encode(s)
+const enc = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s)
 
 function bufToHex(buf: ArrayBuffer | Uint8Array): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-function hexToBytes(hex: string): Uint8Array {
+function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
   if (hex.length % 2 !== 0 || !/^[0-9a-f]*$/i.test(hex)) throw new Error('Invalid hex encoding')
   const bytes = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {
@@ -49,8 +49,8 @@ export async function verifyPassword(password: string, stored: string): Promise<
   // Keep verification of legacy hashes, but reject unbounded work requests.
   if (!Number.isSafeInteger(iterations) || iterations < 1 || iterations > 1_000_000) return false
 
-  let salt: Uint8Array
-  let expected: Uint8Array
+  let salt: Uint8Array<ArrayBuffer>
+  let expected: Uint8Array<ArrayBuffer>
   try {
     salt = hexToBytes(saltHex)
     expected = hexToBytes(hashHex)

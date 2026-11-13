@@ -3,7 +3,7 @@
  * Compatible with Cloudflare Workers — no jsonwebtoken dependency.
  */
 
-const enc = (s: string): Uint8Array => new TextEncoder().encode(s)
+const enc = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s)
 const dec = (buf: Uint8Array): string => new TextDecoder().decode(buf)
 
 function base64UrlEncode(buf: ArrayBuffer | Uint8Array): string {
@@ -13,7 +13,7 @@ function base64UrlEncode(buf: ArrayBuffer | Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
-function base64UrlDecode(s: string): Uint8Array {
+function base64UrlDecode(s: string): Uint8Array<ArrayBuffer> {
   const padded = s.replace(/-/g, '+').replace(/_/g, '/').padEnd(s.length + ((4 - (s.length % 4)) % 4), '=')
   const binary = atob(padded)
   const bytes = new Uint8Array(binary.length)
