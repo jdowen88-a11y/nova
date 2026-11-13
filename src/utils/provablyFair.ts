@@ -4,7 +4,7 @@
  */
 
 /** Encode a string to Uint8Array */
-const enc = (s: string): Uint8Array => new TextEncoder().encode(s)
+const enc = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s)
 
 /** Convert ArrayBuffer to lowercase hex string */
 function bufToHex(buf: ArrayBuffer): string {
