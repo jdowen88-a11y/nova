@@ -6,7 +6,7 @@ function bufToHex(buf: ArrayBuffer | Uint8Array): string {
 }
 
 function hexToBytes(hex: string): Uint8Array {
-  if (hex.length % 2 !== 0) throw new Error('Invalid hex length')
+  if (hex.length % 2 !== 0 || !/^[0-9a-f]*$/i.test(hex)) throw new Error('Invalid hex encoding')
   const bytes = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {
     const byte = Number.parseInt(hex.slice(i, i + 2), 16)
@@ -39,11 +39,15 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const [scheme, itersStr, saltHex, hashHex] = stored.split(':')
-  if (scheme !== 'pbkdf2') return false
+  if (typeof stored !== 'string') return false
+  const parts = stored.split(':')
+  if (parts.length !== 4) return false
+  const [scheme, itersStr, saltHex, hashHex] = parts
+  if (scheme !== 'pbkdf2' || !/^\d+$/.test(itersStr)) return false
 
-  const iterations = Number.parseInt(itersStr, 10)
-  if (!Number.isFinite(iterations) || iterations <= 0) return false
+  const iterations = Number(itersStr)
+  // Keep verification of legacy hashes, but reject unbounded work requests.
+  if (!Number.isSafeInteger(iterations) || iterations < 1 || iterations > 1_000_000) return false
 
   let salt: Uint8Array
   let expected: Uint8Array
@@ -53,13 +57,17 @@ export async function verifyPassword(password: string, stored: string): Promise<
   } catch {
     return false
   }
+  if (salt.length !== SALT_BYTES || expected.length !== HASH_BITS / 8) return false
 
-  const keyMaterial = await crypto.subtle.importKey('raw', enc(password), 'PBKDF2', false, ['deriveBits'])
-  const derived = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
-    keyMaterial,
-    expected.length * 8
-  )
-
-  return constantTimeEqual(new Uint8Array(derived), expected)
+  try {
+    const keyMaterial = await crypto.subtle.importKey('raw', enc(password), 'PBKDF2', false, ['deriveBits'])
+    const derived = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+      keyMaterial,
+      HASH_BITS
+    )
+    return constantTimeEqual(new Uint8Array(derived), expected)
+  } catch {
+    return false
+  }
 }
