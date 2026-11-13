@@ -15,8 +15,8 @@
  *  crash_error      – error message to client
  */
 
-import { generateCrashRound } from '../src/utils/provablyFair'
-import { verifyJWT } from '../src/utils/jwt'
+import { generateCrashRound } from '../utils/provablyFair'
+import { verifyJWT } from '../utils/jwt'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Player {
